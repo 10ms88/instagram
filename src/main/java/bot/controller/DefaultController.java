@@ -25,13 +25,18 @@ public class DefaultController {
 
 
     @PostMapping("/bot_user")
-    public String addBotUser(@RequestParam String userName) throws IOException, InterruptedException {
-       return botUserService.getFollowersList(userName);
+    public void addBotUser(@RequestParam String userName) throws IOException, InterruptedException {
+        botUserService.getFollowersList(userName);
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String name,
-                      @RequestParam String pass) throws IOException, InterruptedException {
-      return   botUserService.login(name, pass);
+    public void login(@RequestParam String name,
+                        @RequestParam String pass) throws Exception {
+         botUserService.login(name, pass);
+    }
+
+    @PostMapping("/create")
+    public void login() throws Exception {
+        botUserService.createBotUsers();
     }
 }
