@@ -1,4 +1,3 @@
-.gradle
 *.ipr
 *.iml
 *.iws
@@ -7,3 +6,6 @@ deploy/*
 modules/*/build/*
 out
 test-run
+
+/.idea/
+/target/

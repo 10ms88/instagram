@@ -1,12 +1,13 @@
 package bot.service;
 
-import bot.model.BotUser;
+import bot.BotUserCreator;
 import bot.model.BotUserLite;
 import bot.model.MaxId;
+import bot.parser.Account;
+import bot.parser.Parser;
 import bot.repository.BotUserLiteRepository;
 import bot.repository.BotUserRepository;
 import bot.repository.MaxIdRepository;
-import com.github.instagram4j.instagram4j.IGClient;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.*;
 import org.brunocvcunha.instagram4j.requests.payload.*;
@@ -14,10 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 @Service
 public class BotUserService {
@@ -33,13 +31,13 @@ public class BotUserService {
 
     private String maxId = null;
 
-    private final String NOT_FOUND = "User not found";
+    private final LinkedList<Instagram4j> instagramQueue = new LinkedList<>();
 
-    private Instagram4j instagram = Instagram4j.builder()
-            .username(null)
-            .password(null)
-            .build();
+    private final LinkedList<List<BotUserLite>> botUserLiteListsQueue = new LinkedList<>();
 
+    boolean flag = false;
+
+    int counter;
 
     public BotUserService(BotUserRepository botUserRepository, BotUserLiteRepository botUserLiteRepository, MaxIdRepository maxIdRepository) {
         this.botUserRepository = botUserRepository;
@@ -48,26 +46,26 @@ public class BotUserService {
     }
 
     public void login(String name, String pass) throws Exception {
-
-        // Setup
-        instagram = Instagram4j.builder()
-                .username(name)
-                .password(pass)
-                .build();
-        instagram.setup();
-
-        // Get login response
-        InstagramLoginResult instagramLoginResult = instagram.login();
-
-        // Check login response
-        checkInstagramLoginResult(instagram, instagramLoginResult, true);
-
-
-
+        List<Account> accountList = Parser.getAccounts();
+        if (counter != accountList.size()) {
+            // Setup
+            Instagram4j instagram = Instagram4j.builder()
+                    .username(accountList.get(counter).getUserName())
+                    .password(accountList.get(counter).getInstagramPassword())
+                    .build();
+            instagram.setup();
+            // Get login response
+            InstagramLoginResult instagramLoginResult = instagram.login();
+            // Check login response
+            checkInstagramLoginResult(instagram, instagramLoginResult, true);
+            instagramQueue.add(instagram);
+            counter++;
+        }
     }
 
+
     public void getFollowersList(String userName) throws IOException, InterruptedException {
-        InstagramSearchUsernameResult usernameResult = instagram.sendRequest(new InstagramSearchUsernameRequest(userName));
+        InstagramSearchUsernameResult usernameResult = instagramQueue.getFirst().sendRequest(new InstagramSearchUsernameRequest(userName));
 
         InstagramGetUserFollowersResult followersResult = null;
 
@@ -83,7 +81,7 @@ public class BotUserService {
 
                 maxIdRepository.save(maxId1);
 
-                followersResult = instagram.sendRequest(new
+                followersResult = instagramQueue.getFirst().sendRequest(new
                         InstagramGetUserFollowersRequest(usernameResult.getUser().getPk(), maxId));
 
                 Thread.sleep(1500);
@@ -112,103 +110,53 @@ public class BotUserService {
     }
 
 
-    public void createBotUsers() throws IOException, InterruptedException {
+    public String createBotUsers() {
+               List<BotUserLite> botUserLiteList;
 
-        int usersCount = 0;
-        int waitingTimes = 0;
-
-        List<BotUser> botUserList = botUserRepository.findAll();
-        if (botUserList.size() > 0)
-
-            for (BotUser botUser : botUserList) {
-                if (botUserLiteRepository.existsById(botUser.getUsername()))
-                    botUserLiteRepository.deleteById(botUser.getUsername());
-            }
-
-        List<BotUserLite> botUserLiteList = botUserLiteRepository.findAll();
+        if (botUserLiteListsQueue.size() != 0) {
+            botUserLiteList = botUserLiteListsQueue.getFirst();
+            botUserLiteListsQueue.remove();
 
 
-        for (BotUserLite botUserLite : botUserLiteList) {
-
-            InstagramSearchUsernameResult instagramSearchUsernameResult = instagram.sendRequest(new InstagramSearchUsernameRequest(botUserLite.username));
-
-            if (instagramSearchUsernameResult.getStatus().equals("ok")) {
-
-                InstagramUser instagramUser = instagramSearchUsernameResult.getUser();
-
-
-
-                BotUser botUser = BotUser.builder()
-                        .username(checkStringLength(instagramUser.username))
-                        .is_private(instagramUser.is_private)
-                        .is_verified(instagramUser.is_verified)
-                        .has_chaining(instagramUser.has_chaining)
-                        .is_business(instagramUser.is_business)
-                        .media_count(instagramUser.media_count)
-                        .profile_pic_id(checkStringLength(instagramUser.profile_pic_id))
-                        .external_url(checkStringLength(instagramUser.external_url))
-                        .full_name(checkStringLength(instagramUser.full_name))
-                        .has_biography_translation(instagramUser.has_biography_translation)
-                        .has_anonymous_profile_picture(instagramUser.has_anonymous_profile_picture)
-                        .is_favorite(instagramUser.is_favorite)
-                        .public_phone_country_code(checkStringLength(instagramUser.public_phone_country_code))
-                        .public_phone_number(checkStringLength(instagramUser.public_phone_number))
-                        .public_email(checkStringLength(instagramUser.public_email))
-                        .pk(instagramUser.pk)
-                        .geo_media_count(instagramUser.geo_media_count)
-                        .usertags_count(instagramUser.usertags_count)
-                        .address_street(checkStringLength(instagramUser.address_street))
-                        .city_name(checkStringLength(instagramUser.city_name))
-                        .zip(checkStringLength(instagramUser.zip))
-                        .direct_messaging(checkStringLength(instagramUser.direct_messaging))
-                        .business_contact_method(checkStringLength(instagramUser.business_contact_method))
-                        .biography(instagramUser.biography.length() > 1999 ? instagramUser.biography.substring(0, 250) : instagramUser.biography)
-                        .follower_count(instagramUser.follower_count)
-                        .following_count(instagramUser.following_count)
-                        .latitude(instagramUser.latitude)
-                        .longitude(instagramUser.longitude)
-                        .category(checkStringLength(instagramUser.category))
-                        .build();
-
-                botUserRepository.save(botUser);
-                botUserLiteRepository.deleteById(botUser.getUsername());
-
-                usersCount++;
-                System.out.println("Created: " + usersCount);
-            } else if (instagramSearchUsernameResult.getMessage() != null && instagramSearchUsernameResult.getMessage().equals(NOT_FOUND)) {
-                BotUser botUser = BotUser.builder()
-                        .username(botUserLite.username)
-                        .profile_pic_id(NOT_FOUND)
-                        .external_url(NOT_FOUND)
-                        .full_name(NOT_FOUND)
-                        .category(checkStringLength(NOT_FOUND))
-                        .build();
-
-                botUserRepository.save(botUser);
-                System.out.println(botUserLite.username + " " + NOT_FOUND);
+            if (instagramQueue.size() != 0) {
+                BotUserCreator botUserCreator = new BotUserCreator(instagramQueue.getFirst(), botUserLiteList, 100 + Math.round(Math.random() * 100));
+                botUserCreator.start();
+                instagramQueue.remove();
             } else {
-                waitingTimes++;
-                timer(125);
+                return "instagramQueue is empty";
             }
+        } else {
+            return "botUserLiteListsQueue is empty";
         }
-    }
-
-    private void timer(int i) {
-               while (i > 0) {
-            System.out.println("Remaining: " + i + " seconds");
-            try {
-                i--;
-                Thread.sleep(1000L);    // 1000L = 1000ms = 1 second
-            } catch (InterruptedException e) {
-                //I don't think you need to do anything for your particular problem
-            }
-        }
-    }
-
-    private String checkStringLength(String string) {
-        if (string != null)
-            return string.length() > 250 ? string.substring(0, 250) : string;
         return null;
+    }
+
+    public String createBotUserLiteLists() {
+        List<BotUserLite> botUserLiteList = botUserLiteRepository.findAll();
+        int totalDotUsersCount = botUserLiteList.size();
+
+        if (totalDotUsersCount > 1000 && !flag) {
+            StringBuilder stringBuilder = new StringBuilder();
+
+            stringBuilder.append("Total users = " + botUserLiteList.size());
+
+            int partitionSize = 500;
+            for (int i = 0; i < botUserLiteList.size(); i += partitionSize) {
+                botUserLiteListsQueue.add(botUserLiteList.subList(i,
+                        Math.min(i + partitionSize, botUserLiteList.size())));
+            }
+            botUserLiteListsQueue.forEach(l -> {
+                stringBuilder.append("\n list size =").append(l.size());
+            });
+            flag = true;
+            return stringBuilder.toString();
+
+        } else if (!flag) {
+            botUserLiteListsQueue.add(botUserLiteList);
+            flag = true;
+            return "Total users =" + botUserLiteList.size();
+        }
+        return "BotUserLiteLists was created";
     }
 
 
@@ -393,6 +341,5 @@ public class BotUserService {
             System.out.println(instagramLoginResult.getMessage());
         }
     }
-
 
 }
