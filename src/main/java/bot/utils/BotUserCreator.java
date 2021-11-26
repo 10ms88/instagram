@@ -1,6 +1,6 @@
-package bot;
+package bot.utils;
 
-import bot.confif.ApplicationContextProvider;
+import bot.config.ApplicationContextProvider;
 import bot.model.BotUser;
 import bot.model.BotUserLite;
 import bot.repository.BotUserLiteRepository;
@@ -36,6 +36,12 @@ public class BotUserCreator extends Thread {
         String NOT_FOUND = "User not found";
 
         for (BotUserLite botUserLite : botUserLiteList) {
+//            try {
+//                Thread.sleep(1500 + Math.round(Math.random() * 5000));
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+            if(waitingTimes == 15) break;
 
             InstagramSearchUsernameResult instagramSearchUsernameResult = null;
             try {
@@ -82,7 +88,6 @@ public class BotUserCreator extends Thread {
 
 
                 ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
-                ApplicationContextProvider.getApplicationContext().getBean(BotUserLiteRepository.class).deleteById(botUser.getUsername());
 
 
                 usersCount++;
@@ -97,12 +102,16 @@ public class BotUserCreator extends Thread {
                         .build();
 
                 ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
-                ApplicationContextProvider.getApplicationContext().getBean(BotUserLiteRepository.class).deleteById(botUser.getUsername());
                 System.out.println(botUserLite.username + " " + NOT_FOUND);
-            } else {
+            } else  if( waitingTimes < 7) {
                 waitingTimes++;
                 System.out.println("waitingTimes " + waitingTimes + " " + currentThread().getName());
                 timer(waiting);
+            }
+            else  {
+                waitingTimes++;
+                System.out.println("waitingTimes " + waitingTimes + " " + currentThread().getName());
+                timer(waiting * 5);
             }
         }
     }

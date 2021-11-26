@@ -1,6 +1,6 @@
 package bot.service;
 
-import bot.BotUserCreator;
+import bot.config.Props;
 import bot.model.BotUserLite;
 import bot.model.MaxId;
 import bot.parser.Account;
@@ -8,6 +8,8 @@ import bot.parser.Parser;
 import bot.repository.BotUserLiteRepository;
 import bot.repository.BotUserRepository;
 import bot.repository.MaxIdRepository;
+import bot.utils.BotUserCreator;
+import bot.utils.BotUserLiteExcluder;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.*;
 import org.brunocvcunha.instagram4j.requests.payload.*;
@@ -29,7 +31,6 @@ public class BotUserService {
     @Autowired
     private final MaxIdRepository maxIdRepository;
 
-    private String maxId = null;
 
     private final LinkedList<Instagram4j> instagramQueue = new LinkedList<>();
 
@@ -39,17 +40,23 @@ public class BotUserService {
 
     int counter;
 
+    private final String NOTIFICATION = "There is no Instagram4j";
+    private final String NOTIFICATION_ = "Instagram4j created";
+//    private final long USER_ID = 5552563905L; //fitness_rezinka
+
+
     public BotUserService(BotUserRepository botUserRepository, BotUserLiteRepository botUserLiteRepository, MaxIdRepository maxIdRepository) {
         this.botUserRepository = botUserRepository;
         this.botUserLiteRepository = botUserLiteRepository;
         this.maxIdRepository = maxIdRepository;
     }
 
-    public void login(String name, String pass) throws Exception {
+    public String login(String name, String pass) throws Exception {
         List<Account> accountList = Parser.getAccounts();
         if (counter != accountList.size()) {
             // Setup
-            Instagram4j instagram = Instagram4j.builder()
+            Instagram4j instagram = getInstagram4j();
+            instagram = Instagram4j.builder()
                     .username(accountList.get(counter).getUserName())
                     .password(accountList.get(counter).getInstagramPassword())
                     .build();
@@ -60,31 +67,46 @@ public class BotUserService {
             checkInstagramLoginResult(instagram, instagramLoginResult, true);
             instagramQueue.add(instagram);
             counter++;
+            return NOTIFICATION_ + " " + accountList.get(counter - 1).getUserName();
         }
+        return NOTIFICATION;
     }
 
 
-    public void getFollowersList(String userName) throws IOException, InterruptedException {
-        InstagramSearchUsernameResult usernameResult = instagramQueue.getFirst().sendRequest(new InstagramSearchUsernameRequest(userName));
+    public void getFollowersList(long userId, String maxId) throws InterruptedException {
 
         InstagramGetUserFollowersResult followersResult = null;
 
         List<InstagramUserSummary> followers = new ArrayList<>();
 
+        if (maxIdRepository.findLastMaxId() != null && maxId.equals(""))
+            maxId = maxIdRepository.findLastMaxId().getMaxId();
+        int followersListOldSize;
+
+        Instagram4j instagram4j = getInstagram4j();
+
         while (followersResult == null || maxId != null) {
+            followersListOldSize = followers.size();
             try {
                 System.out.println("followers.size: " + followers.size());
                 MaxId maxId1 = MaxId.builder()
                         .maxId(maxId)
                         .createdTs(System.currentTimeMillis())
                         .build();
-
                 maxIdRepository.save(maxId1);
 
-                followersResult = instagramQueue.getFirst().sendRequest(new
-                        InstagramGetUserFollowersRequest(usernameResult.getUser().getPk(), maxId));
 
-                Thread.sleep(1500);
+                assert instagram4j != null;
+                try {
+                    followersResult = instagram4j.sendRequest(new InstagramGetUserFollowersRequest(userId, maxId));
+
+                } catch (NullPointerException nullPointerException) {
+
+                    System.out.println(" Try another instagram4j");
+                    break;
+                }
+
+//                Thread.sleep(1500);
                 if (followersResult != null) {
                     if (followersResult.getStatus().equals("ok")) {
                         maxId = followersResult.getNext_max_id();
@@ -100,7 +122,8 @@ public class BotUserService {
                         }
 
                     }
-                    if (followers.size() >= 50000) break;
+
+                    if (followers.size() >= 200000 || followersListOldSize - followers.size() == 0) break;
                 }
             } catch (IOException e) {
                 Thread.sleep(5000);
@@ -110,8 +133,23 @@ public class BotUserService {
     }
 
 
+    public void excludeBotUserLiteFromCreatingList() {
+        BotUserLiteExcluder.excludeBotUserLiteFromCreatingList();
+    }
+
+    private Instagram4j getInstagram4j() {
+        Instagram4j instagram;
+        if (instagramQueue.size() != 0) {
+            instagram = instagramQueue.getFirst();
+            instagramQueue.remove();
+            return instagram;
+        }
+        return null;
+    }
+
+
     public String createBotUsers() {
-               List<BotUserLite> botUserLiteList;
+        List<BotUserLite> botUserLiteList;
 
         if (botUserLiteListsQueue.size() != 0) {
             botUserLiteList = botUserLiteListsQueue.getFirst();
@@ -132,7 +170,7 @@ public class BotUserService {
     }
 
     public String createBotUserLiteLists() {
-        List<BotUserLite> botUserLiteList = botUserLiteRepository.findAll();
+        List<BotUserLite> botUserLiteList = BotUserLiteExcluder.excludeBotUserLiteFromCreatingList();
         int totalDotUsersCount = botUserLiteList.size();
 
         if (totalDotUsersCount > 1000 && !flag) {
@@ -140,7 +178,7 @@ public class BotUserService {
 
             stringBuilder.append("Total users = " + botUserLiteList.size());
 
-            int partitionSize = 500;
+            int partitionSize = 35000;
             for (int i = 0; i < botUserLiteList.size(); i += partitionSize) {
                 botUserLiteListsQueue.add(botUserLiteList.subList(i,
                         Math.min(i + partitionSize, botUserLiteList.size())));
@@ -230,8 +268,17 @@ public class BotUserService {
                         // Please input Security code
                         System.out.println("Please input Security code");
                         String securityCode = null;
-                        try (Scanner scanner = new Scanner(System.in)) {
-                            securityCode = scanner.nextLine();
+                        boolean isValid = false;
+                        while (!isValid) {
+                            try (Scanner scanner = new Scanner(System.in)) {
+                                String validate = scanner.nextLine();
+                                if (validate.length() == 6) {
+                                    securityCode = validate;
+                                    isValid = true;
+                                } else {
+                                    System.out.println("Please input Security code");
+                                }
+                            }
                         }
 
                         // Send security code
