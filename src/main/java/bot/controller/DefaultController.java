@@ -4,8 +4,6 @@ import bot.service.BotUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-
 
 @RestController
 public class DefaultController {
@@ -14,20 +12,14 @@ public class DefaultController {
     private BotUserService botUserService;
 
 
-    @RequestMapping("/")
-    public String index() {
-        return "index";
-    }
-
-
     @PostMapping("/getFollowersList")
-    public void getFollowersList(@RequestParam long  userId, @RequestParam String maxId) throws IOException, InterruptedException, ClassNotFoundException {
-        botUserService.getFollowersList(userId, maxId);
+    public void getFollowersList(@RequestParam String maxId) {
+        botUserService.getFollowersList(maxId);
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String name, @RequestParam String pass) throws Exception {
-        return botUserService.login(name, pass);
+    public void login() throws Exception {
+         botUserService.login();
     }
 
     @PostMapping("/createBotUsers")
@@ -42,9 +34,8 @@ public class DefaultController {
 
     @GetMapping("/exclude_BotUserLite_From_Creating_List")
     public void excludeBotUserLiteFromCreatingList() {
-         botUserService.excludeBotUserLiteFromCreatingList();
+        botUserService.excludeBotUserLiteFromCreatingList();
     }
-
 
 
 }

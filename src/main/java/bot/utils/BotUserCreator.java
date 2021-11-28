@@ -1,9 +1,9 @@
 package bot.utils;
 
 import bot.config.ApplicationContextProvider;
+import bot.config.Props;
 import bot.model.BotUser;
 import bot.model.BotUserLite;
-import bot.repository.BotUserLiteRepository;
 import bot.repository.BotUserRepository;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.InstagramSearchUsernameRequest;
@@ -25,8 +25,6 @@ public class BotUserCreator extends Thread {
         this.instagram = instagram;
         this.botUserLiteList = botUserLiteList;
         this.waiting = waiting;
-
-
     }
 
     @Override
@@ -41,7 +39,7 @@ public class BotUserCreator extends Thread {
 //            } catch (InterruptedException e) {
 //                e.printStackTrace();
 //            }
-            if(waitingTimes == 15) break;
+            if (waitingTimes == Props.getWaitingTimes()) break;
 
             InstagramSearchUsernameResult instagramSearchUsernameResult = null;
             try {
@@ -86,12 +84,10 @@ public class BotUserCreator extends Thread {
                         .category(checkStringLength(instagramUser.category))
                         .build();
 
-
                 ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
 
-
                 usersCount++;
-                System.out.println("Created: " + usersCount);
+                System.out.println(instagram.getUsername() + " сreated: " + usersCount);
             } else if (instagramSearchUsernameResult.getMessage() != null && instagramSearchUsernameResult.getMessage().equals(NOT_FOUND)) {
                 BotUser botUser = BotUser.builder()
                         .username(botUserLite.username)
@@ -103,14 +99,13 @@ public class BotUserCreator extends Thread {
 
                 ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
                 System.out.println(botUserLite.username + " " + NOT_FOUND);
-            } else  if( waitingTimes < 7) {
+            } else if (waitingTimes < Math.round(waitingTimes / 2)) {
                 waitingTimes++;
-                System.out.println("waitingTimes " + waitingTimes + " " + currentThread().getName());
+                System.out.println(instagram.getUsername() + " waitingTimes " + waitingTimes + " " + currentThread().getName());
                 timer(waiting);
-            }
-            else  {
+            } else {
                 waitingTimes++;
-                System.out.println("waitingTimes " + waitingTimes + " " + currentThread().getName());
+                System.out.println(instagram.getUsername() + " waitingTimes " + waitingTimes + " " + currentThread().getName());
                 timer(waiting * 5);
             }
         }

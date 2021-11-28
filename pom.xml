@@ -18,8 +18,16 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <vaadin.version>12.0.4</vaadin.version>
+
     </properties>
 
+    <repositories>
+        <repository>
+            <id>Vaadin Directory</id>
+            <url>http://maven.vaadin.com/vaadin-addons</url>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -59,19 +67,18 @@
             <version>2.8.0</version>
         </dependency>
 
-        <dependency>
-            <!-- jsoup HTML parser library @ https://jsoup.org/ -->
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-            <version>1.13.1</version>
-        </dependency>
+        <!-- <dependency>-->
+        <!-- &lt;!&ndash; jsoup HTML parser library @ https://jsoup.org/ &ndash;&gt;-->
+        <!-- <groupId>org.jsoup</groupId>-->
+        <!-- <artifactId>jsoup</artifactId>-->
+        <!-- <version>1.13.1</version>-->
+        <!-- </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.brunocvcunha.instagram4j/instagram4j -->
         <dependency>
             <groupId>org.brunocvcunha.instagram4j</groupId>
             <artifactId>instagram4j</artifactId>
             <version>1.14</version>
         </dependency>
-
 
 
         <!-- https://mvnrepository.com/artifact/junit/junit -->
@@ -115,24 +122,54 @@
             <version>4.9.3</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.vaadin</groupId>
+            <artifactId>vaadin-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>2.3.4.RELEASE</version>
+            <type>maven-plugin</type>
+        </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-bom</artifactId>
+                <version>${vaadin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
 
     <build>
         <plugins>
 
-<!--            <plugin>-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-maven-plugin</artifactId>-->
-<!--            </plugin>-->
             <plugin>
                 <!-- Build an executable JAR -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>bot.SpringApplication</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
-
-
 </project>

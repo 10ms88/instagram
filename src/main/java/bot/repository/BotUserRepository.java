@@ -38,6 +38,8 @@ public interface BotUserRepository extends JpaRepository<BotUser, String> {
     @Query(value = "select * from BOT_USER where bot_user.follower_count < bot_user.following_count", nativeQuery = true)
     List<BotUser> findBySubscriptionsOverSubscribers();
 
+    @Query(value = "select * from BOT_USER where bot_user.follower_count > bot_user.following_count", nativeQuery = true)
+    List<BotUser> findBySubscribersOverSubscriptions();
 
     @Query(value = "select * from BOT_USER where is_business = true", nativeQuery = true)
     List<BotUser> findByIsBusiness();
