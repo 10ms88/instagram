@@ -6,8 +6,7 @@ import java.util.Properties;
 
 public class Props {
 
-    private static final String PATH_TO_PROPERTIES = "src/main/resources/config.properties";
-    private static FileInputStream fileInputStream;
+    private static final String PATH_TO_PROPERTIES = "C:\\Users\\mmmss\\Desktop\\insta\\i\\instagram\\src\\main\\resources\\config.properties";
 
 
     public static long getFollowersSize() {
@@ -22,7 +21,7 @@ public class Props {
         return getLongTypeProperty("userIdForScanFollowers");
     }
 
-    public static synchronized long  getWaitingTimes() {
+    public static synchronized long getWaitingTimes() {
         return getLongTypeProperty("waitingTimes");
     }
 
@@ -30,12 +29,11 @@ public class Props {
     private static long getLongTypeProperty(String propertyName) {
         Properties prop = new Properties();
         try {
-            fileInputStream = new FileInputStream(PATH_TO_PROPERTIES);
+            FileInputStream fileInputStream = new FileInputStream(PATH_TO_PROPERTIES);
             prop.load(fileInputStream);
             propertyName = prop.getProperty(propertyName);
             fileInputStream.close();
         } catch (IOException e) {
-            System.out.println("Ошибка в программе: файл " + PATH_TO_PROPERTIES + " не обнаружено");
             e.printStackTrace();
         }
         return Long.parseLong(propertyName);

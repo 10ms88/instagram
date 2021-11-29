@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 public class Parser {
 
 
-    private static String FILE_PATH_ACCOUNTS = "accounts.txt";
-    private static String FILE_PATH_PROXIES = "proxies.txt";
+    private static String FILE_PATH_ACCOUNTS = "C:\\Users\\mmmss\\Desktop\\insta\\i\\instagram\\accounts.txt";
+    private static String FILE_PATH_PROXIES = "C:\\Users\\mmmss\\Desktop\\insta\\i\\instagram\\proxies.txt";
 
     public static List<Account> getAccounts() {
 

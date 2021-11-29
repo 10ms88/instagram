@@ -66,6 +66,10 @@ public class ReportService {
                 .append("...");
 
 
+        System.out.println(Props.getUserIdForScanFollowers());
+        System.out.println(Props.getWaitingTimes());
+        System.out.println(Props.getPartitionSize());
+        System.out.println(Props.getFollowersSize());
 
         return stringBuilder.toString();
     }
@@ -75,9 +79,5 @@ public class ReportService {
     }
 
 
-    private void proxy (){
-
-
-    }
 
 }
