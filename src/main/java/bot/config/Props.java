@@ -22,7 +22,7 @@ public class Props {
         return getLongTypeProperty("userIdForScanFollowers");
     }
 
-    public static long getWaitingTimes() {
+    public static synchronized long  getWaitingTimes() {
         return getLongTypeProperty("waitingTimes");
     }
 

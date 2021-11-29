@@ -1,6 +1,7 @@
 package bot.service;
 
 import bot.config.ApplicationContextProvider;
+import bot.config.Props;
 import bot.repository.BotUserRepository;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -63,6 +64,8 @@ public class ReportService {
                 .append("ссылка на сайт в описании.............. ").append(getProportion(findByLinkSet)).append("%\n")
                 .append("указан email........................... ").append(getProportion(findByEmailSet)).append("%\n")
                 .append("...");
+
+
 
         return stringBuilder.toString();
     }

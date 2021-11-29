@@ -18,32 +18,32 @@ import java.util.List;
 @Route("q")
 public class BotUserList extends HorizontalLayout {
 
-    private Grid<BotUser> botUserGridGrid = new Grid<>(BotUser.class, false);
-
+    private final Grid<BotUser> botUserGridGrid = new Grid<>(BotUser.class, false);
     private final VerticalLayout toolbar = new VerticalLayout();
-
-    private final VerticalLayout verticalLayout = new VerticalLayout();
-    private final VerticalLayout horizontalLayout = new VerticalLayout();
-    private final List<BotUser> botUserList = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).findAll();
+    private final List<BotUser> botUserList = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).findAll().subList(0,10);
     private List<BotUser> botUserListFiltered = botUserList;
-
     private final TextArea textArea = new TextArea();
-
 
     @Autowired
     public BotUserList() {
-        botUserGridGrid.setItems(botUserList);
+        VerticalLayout horizontalLayout = new VerticalLayout();
+        horizontalLayout.setWidth("80%");
+        VerticalLayout verticalLayout = new VerticalLayout();
+        verticalLayout.setWidth("20%");
+        toolbar.setSpacing(false);
+
         initButtons();
         initTable();
         initTextArea();
-        toolbar.setSpacing(false);
+
+        botUserGridGrid.setItems(botUserList);
+
         horizontalLayout.add(botUserGridGrid);
         verticalLayout.add(textArea,toolbar);
-        horizontalLayout.setWidth("80%");
-        verticalLayout.setWidth("20%");
+
         add(horizontalLayout, verticalLayout);
 
-        this.setSpacing(false);
+
     }
 
 

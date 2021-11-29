@@ -31,7 +31,6 @@ public class BotUserCreator extends Thread {
     public void run() {
         int usersCount = 0;
         int waitingTimes = 0;
-        String NOT_FOUND = "User not found";
 
         for (BotUserLite botUserLite : botUserLiteList) {
 //            try {
@@ -88,18 +87,7 @@ public class BotUserCreator extends Thread {
 
                 usersCount++;
                 System.out.println(instagram.getUsername() + " сreated: " + usersCount);
-            } else if (instagramSearchUsernameResult.getMessage() != null && instagramSearchUsernameResult.getMessage().equals(NOT_FOUND)) {
-                BotUser botUser = BotUser.builder()
-                        .username(botUserLite.username)
-                        .profile_pic_id(NOT_FOUND)
-                        .external_url(NOT_FOUND)
-                        .full_name(NOT_FOUND)
-                        .category(checkStringLength(NOT_FOUND))
-                        .build();
-
-                ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
-                System.out.println(botUserLite.username + " " + NOT_FOUND);
-            } else if (waitingTimes < Math.round(waitingTimes / 2)) {
+            }  else if (waitingTimes < Math.round(waitingTimes / 2)) {
                 waitingTimes++;
                 System.out.println(instagram.getUsername() + " waitingTimes " + waitingTimes + " " + currentThread().getName());
                 timer(waiting);
