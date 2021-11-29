@@ -20,11 +20,12 @@ import java.util.List;
 public class BotUserList extends HorizontalLayout {
 
     private final Grid<BotUser> BOT_USER_GRID = new Grid<>(BotUser.class, false);
+    BotUserRepository botUserRepository = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class);
     private final VerticalLayout TOOLBAR = new VerticalLayout();
-    private final List<BotUser> BOT_USER_LIST = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).findAll();
+    private final List<BotUser> BOT_USER_LIST = botUserRepository.findAllLimit();
     private List<BotUser> botUserListFiltered = BOT_USER_LIST;
     private final TextArea TEXT_AREA = new TextArea();
-    private final int TOTAL_BOT_USERS = BOT_USER_LIST.size();
+    private final int TOTAL_BOT_USERS =botUserRepository.getTotalUsersBot();
     private final int LIMIT_BOT_USER_LIST = 100;
 
 
@@ -39,7 +40,7 @@ public class BotUserList extends HorizontalLayout {
 
         initButtons();
         initTable();
-        initTextArea();
+        initTextArea(botUserRepository.getTotalUsersBot());
 
         BOT_USER_GRID.setItems(limitBotUserList(BOT_USER_LIST));
 
@@ -50,18 +51,17 @@ public class BotUserList extends HorizontalLayout {
     }
 
 
-    private void initTextArea() {
-        int proportion = Math.round((botUserListFiltered.size() * 100) / TOTAL_BOT_USERS);
-        TEXT_AREA.setValue(proportion + "% пользователей (" + botUserListFiltered.size() + " из " + TOTAL_BOT_USERS + ")");
+    private void initTextArea(int count) {
+        int proportion = Math.round((count* 100) / TOTAL_BOT_USERS);
+        TEXT_AREA.setValue(proportion + "% пользователей (" + count + " из " + TOTAL_BOT_USERS + ")");
     }
 
     private List<BotUser> limitBotUserList(List<BotUser> botUserList) {
-        return botUserList.subList(0, LIMIT_BOT_USER_LIST);
+        return botUserList.subList(0, botUserList.size());
     }
 
     private void initButtons() {
         List<Button> buttonList = new ArrayList<>();
-        BotUserRepository botUserRepository = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class);
 
         Constants.FILTERS_LIST.forEach(filterName -> {
             buttonList.add(new Button(filterName));
@@ -77,119 +77,119 @@ public class BotUserList extends HorizontalLayout {
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByNoPublications();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByNoPublications());
                     });
                     break;
                 case Constants.findByPublicationsOver1000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByPublicationsOver1000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByPublicationsOver1000());
                     });
                     break;
                 case Constants.findByNoAvatar:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByNoAvatar();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByNoAvatar());
                     });
                     break;
                 case Constants.findBySubscriptionsOver1000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscriptionsOver1000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscriptionsOver1000());
                     });
                     break;
                 case Constants.findBySubscriptionsOver2000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscriptionsOver2000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscriptionsOver2000());
                     });
                     break;
                 case Constants.findBySubscriptionsOver3000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscriptionsOver3000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscriptionsOver3000());
                     });
                     break;
                 case Constants.findBySubscribersOver1000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscribersOver1000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscribersOver1000());
                     });
                     break;
                 case Constants.findBySubscribersOver2000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscribersOver2000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscribersOver2000());
                     });
                     break;
                 case Constants.findBySubscribersOver3000:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscribersOver3000();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscribersOver3000());
                     });
                     break;
                 case Constants.findBySubscriptionsOverSubscribers:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscriptionsOverSubscribers();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea( botUserRepository.countFindBySubscriptionsOverSubscribers());
                     });
                     break;
                 case Constants.findBySubscribersOverSubscriptions:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscribersOverSubscriptions();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindBySubscribersOverSubscriptions());
                     });
                     break;
                 case Constants.findByIsBusiness:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByIsBusiness();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByIsBusiness());
                     });
                     break;
                 case Constants.findByIsPrivate:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByIsPrivate();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea( botUserRepository.countFindByIsPrivate());
                     });
                     break;
                 case Constants.findByPhoneNumberSet:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByPhoneNumberSet();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByPhoneNumberSet());
                     });
                     break;
                 case Constants.findByLinkSet:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByLinkSet();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByLinkSet());
                     });
                     break;
                 case Constants.findByEmailSet:
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByEmailSet();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.countFindByEmailSet());
                     });
                     break;
                 case Constants.findAll:
                     button.addClickListener(e -> {
-                        botUserListFiltered = botUserRepository.findAll();
+                        botUserListFiltered = botUserRepository.findAllLimit();
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea();
+                        initTextArea(botUserRepository.getTotalUsersBot());
                     });
                     break;
             }
