@@ -10,6 +10,12 @@ import bot.repository.BotUserRepository;
 import bot.repository.MaxIdRepository;
 import bot.utils.BotUserCreator;
 import bot.utils.BotUserLiteExcluder;
+import lombok.extern.log4j.Log4j;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.*;
 import org.brunocvcunha.instagram4j.requests.payload.*;
@@ -20,6 +26,7 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
+@Log4j
 public class BotUserService {
 
     @Autowired
@@ -38,7 +45,8 @@ public class BotUserService {
 
     boolean flag = false;
 
-    int counter;
+    private Map<String, BotUserCreator> botUserCreatorMap = new HashMap<>();
+
 
     public BotUserService(BotUserRepository botUserRepository, BotUserLiteRepository botUserLiteRepository, MaxIdRepository maxIdRepository) {
         this.botUserRepository = botUserRepository;
@@ -74,38 +82,36 @@ public class BotUserService {
 //
 
 
-    public void login() throws Exception {
+    public void login(int withProxy) throws Exception {
         List<Account> accountList = Parser.getAccounts();
-        for (Account account : accountList) {
-            Instagram4j instagram = Instagram4j.builder()
+        Account account = accountList.get(0);
+
+        HttpHost proxy = new HttpHost(account.getProxyAddress(), account.getPort(), "http");
+        CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+        credentialsProvider.setCredentials(new AuthScope(AuthScope.ANY),
+                new UsernamePasswordCredentials(account.getProxyUserName(), account.getProxyPassword()));
+
+        Instagram4j instagram = Instagram4j.builder()
+                .username(account.getUserName())
+                .password(account.getInstagramPassword())
+                .proxy(proxy)
+                .credentialsProvider(credentialsProvider)
+                .build();
+
+        if (withProxy == 0) {
+            instagram = Instagram4j.builder()
                     .username(account.getUserName())
                     .password(account.getInstagramPassword())
                     .build();
-            instagram.setup();
-            // Get login response
-            InstagramLoginResult instagramLoginResult = instagram.login();
-            // Check login response
-            checkInstagramLoginResult(instagram, instagramLoginResult, true);
-            instagramQueue.add(instagram);
         }
+        instagram.setup();
+        // Get login response
+        InstagramLoginResult instagramLoginResult = instagram.login();
+        // Check login response
+        checkInstagramLoginResult(instagram, instagramLoginResult, true);
+        instagramQueue.add(instagram);
     }
 
-
-//    public void createInstagram4j() {
-//        List<Account> accountList = Parser.getAccounts();
-//        for (Account account : accountList) {
-//            Instagram4j instagram = Instagram4j.builder()
-//                    .username(account.getUserName())
-//                    .password(account.getInstagramPassword())
-//                    .build();
-//            instagramQueue.add(instagram);
-//        }
-//        System.out.println("Created:");
-//               instagramQueue.forEach(instagram4j -> {
-//            System.out.println(instagram4j.getUsername());
-//        });
-//    }
-//
 
     public void getFollowersList(String maxId) {
 
@@ -123,7 +129,7 @@ public class BotUserService {
         while (followersResult == null || maxId != null && instagram4j.isLoggedIn()) {
             followersListOldSize = followers.size();
             try {
-                System.out.println(instagram4j.getUsername() + " followers.size: " + followers.size());
+                log.info(instagram4j.getUsername() + " followers.size: " + followers.size());
                 MaxId maxId1 = MaxId.builder()
                         .maxId(maxId)
                         .createdTs(System.currentTimeMillis())
@@ -165,6 +171,7 @@ public class BotUserService {
                 }
             }
         }
+        instagramQueue.add(instagram4j);
 
     }
 
@@ -196,6 +203,7 @@ public class BotUserService {
                 BotUserCreator botUserCreator = new BotUserCreator(instagramQueue.getFirst(), botUserLiteList, 100 + Math.round(Math.random() * 50));
                 botUserCreator.start();
                 instagramQueue.remove();
+                botUserCreatorMap.put(botUserCreator.getName(), botUserCreator);
             } else {
                 return "instagramQueue is empty";
             }
@@ -203,6 +211,35 @@ public class BotUserService {
             return "botUserLiteListsQueue is empty";
         }
         return null;
+    }
+
+    public boolean interruptThread(String threadName) {
+        BotUserCreator botUserCreator = botUserCreatorMap.get(threadName);
+        botUserCreator.interrupt();
+        return botUserCreator.isInterrupted();
+
+    }
+
+    public String getThreadsMap() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Map.Entry<String, BotUserCreator> entry : botUserCreatorMap.entrySet()) {
+            stringBuilder
+                    .append(entry.getKey())
+                    .append(" : ")
+                    .append(entry.getValue().getInstagram().getUsername())
+                    .append(" : LoggedIn: ")
+                    .append(entry.getValue().getInstagram().isLoggedIn())
+                    .append(" : Created ")
+                    .append(entry.getValue().getCreatingCount())
+                    .append(" : Next request in ")
+                    .append(entry.getValue().getTimer())
+                    .append(" : Waiting times ")
+                    .append(entry.getValue().getWaitingTimes())
+                    .append("\n");
+        }
+
+
+        return stringBuilder.toString();
     }
 
     public String createBotUserLiteLists() {
@@ -424,5 +461,6 @@ public class BotUserService {
             System.out.println(instagramLoginResult.getMessage());
         }
     }
+
 
 }

@@ -35,6 +35,10 @@ public class Parser {
                         instagramPassword(lineArray[1])
                         .email(lineArray[2])
                         .emailPassword(lineArray[3])
+                        .proxyAddress(lineArray[4])
+                        .port(Integer.parseInt(lineArray[5]))
+                        .proxyUserName(lineArray[6])
+                        .proxyPassword(lineArray[7])
                         .build();
 
                 accountList.add(account);

@@ -5,6 +5,7 @@ import bot.config.Props;
 import bot.model.BotUser;
 import bot.model.BotUserLite;
 import bot.repository.BotUserRepository;
+import lombok.extern.log4j.Log4j;
 import org.brunocvcunha.instagram4j.Instagram4j;
 import org.brunocvcunha.instagram4j.requests.InstagramSearchUsernameRequest;
 import org.brunocvcunha.instagram4j.requests.payload.InstagramSearchUsernameResult;
@@ -13,12 +14,16 @@ import org.brunocvcunha.instagram4j.requests.payload.InstagramUser;
 import java.io.IOException;
 import java.util.List;
 
+@Log4j
 public class BotUserCreator extends Thread {
 
 
     private final Instagram4j instagram;
     private final List<BotUserLite> botUserLiteList;
     private final long waiting;
+    private int creatingCount = 0;
+    private long timer;
+    private int waitingTimes = 0;
 
 
     public BotUserCreator(Instagram4j instagram, List<BotUserLite> botUserLiteList, long waiting) {
@@ -27,10 +32,12 @@ public class BotUserCreator extends Thread {
         this.waiting = waiting;
     }
 
+
+
+
+
     @Override
     public void run() {
-        int usersCount = 0;
-        int waitingTimes = 0;
 
         for (BotUserLite botUserLite : botUserLiteList) {
 //            try {
@@ -85,25 +92,42 @@ public class BotUserCreator extends Thread {
 
                 ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class).save(botUser);
 
-                usersCount++;
-                System.out.println(instagram.getUsername() + " сreated: " + usersCount);
+                creatingCount++;
+                log.info(instagram.getUsername() + " сreated: " + creatingCount);
             }  else if (waitingTimes < Math.round(waitingTimes / 2)) {
                 waitingTimes++;
-                System.out.println(instagram.getUsername() + " waitingTimes " + waitingTimes + " " + currentThread().getName());
+                log.info(instagram.getUsername() + " waitingTimes " + waitingTimes);
                 timer(waiting);
             } else {
                 waitingTimes++;
-                System.out.println(instagram.getUsername() + " waitingTimes " + waitingTimes + " " + currentThread().getName());
+                log.info(instagram.getUsername() + " waitingTimes " + waitingTimes);
                 timer(waiting * 5);
             }
         }
     }
 
 
-    private static void timer(long i) {
+//    private static void timer(long i) {
+//        while (i > 0) {
+//            if (i % 60 == 0)
+//                log.info("Next request in: " + i + " seconds");
+//            if (i % 5 == 0 &&  i < 10)
+//                log.info("Next request in: " + i + " seconds");
+//            try {
+//                i--;
+//                Thread.sleep(1000L);    // 1000L = 1000ms = 1 second
+//            } catch (InterruptedException e) {
+//                //I don't think you need to do anything for your particular problem
+//            }
+//        }
+//    }
+
+
+        private void timer(long i) {
         while (i > 0) {
-            if (i % 10 == 0)
-                System.out.println("Next request in: " + i + " seconds " + currentThread().getName());
+
+            this.setTimer(i);
+
             try {
                 i--;
                 Thread.sleep(1000L);    // 1000L = 1000ms = 1 second
@@ -119,4 +143,25 @@ public class BotUserCreator extends Thread {
         return null;
     }
 
+    public Instagram4j getInstagram() {
+        return instagram;
+    }
+
+    public int getCreatingCount() {
+        return creatingCount;
+    }
+
+
+
+    public long getTimer() {
+        return timer;
+    }
+
+    public void setTimer(long timer) {
+        this.timer = timer;
+    }
+
+    public int getWaitingTimes() {
+        return waitingTimes;
+    }
 }

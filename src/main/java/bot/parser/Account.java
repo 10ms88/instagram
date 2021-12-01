@@ -17,5 +17,14 @@ public class Account {
 
     private String emailPassword;
 
+    private String proxyAddress;
+
+    private int port;
+
+    private String proxyUserName;
+
+    private String proxyPassword;
+
+
 }
 

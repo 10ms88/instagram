@@ -6,6 +6,7 @@ import bot.model.BotUser;
 import bot.model.BotUserLite;
 import bot.repository.BotUserLiteRepository;
 import bot.repository.BotUserRepository;
+import lombok.extern.log4j.Log4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 //        Total botUser 41663
 //        To creating  219783
 
-
+@Log4j
 public class BotUserLiteExcluder {
 
 
@@ -37,8 +38,8 @@ public class BotUserLiteExcluder {
                 .stream()
                 .collect(Collectors.toMap(BotUser::getUsername, botUser -> botUser, (a, b) -> b));
 
-        System.out.println( "Total botUserLites " + botUserLiteMap.size());
-        System.out.println("Total botUser " + botUserMap.size());
+        log.info( "Total botUserLites " + botUserLiteMap.size());
+        log.info("Total botUser " + botUserMap.size());
 
         List<BotUserLite> resultUserNamesList = new ArrayList<>();
 
@@ -46,7 +47,7 @@ public class BotUserLiteExcluder {
             if (!botUserMap.containsKey(entry.getKey()))
                 resultUserNamesList.add(entry.getValue());
         }
-        System.out.println("To creating  " + resultUserNamesList.size());
+        log.info("To creating  " + resultUserNamesList.size());
 
 
         return resultUserNamesList;

@@ -22,7 +22,7 @@ public class BotUserList extends HorizontalLayout {
     private final Grid<BotUser> BOT_USER_GRID = new Grid<>(BotUser.class, false);
     BotUserRepository botUserRepository = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class);
     private final VerticalLayout TOOLBAR = new VerticalLayout();
-    private final int LIMIT_BOT_USER_LIST = 1000;
+    private final int LIMIT_BOT_USER_LIST = 1000000;
     private final List<BotUser> BOT_USER_LIST = botUserRepository.findAllLimit(LIMIT_BOT_USER_LIST);
     private List<BotUser> botUserListFiltered = BOT_USER_LIST;
     private final TextArea TEXT_AREA = new TextArea();

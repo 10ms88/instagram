@@ -18,8 +18,8 @@ public class DefaultController {
     }
 
     @PostMapping("/login")
-    public void login() throws Exception {
-         botUserService.login();
+    public void login(@RequestParam String withProxy) throws Exception {
+         botUserService.login(Integer.parseInt(withProxy));
     }
 
     @PostMapping("/createBotUsers")
@@ -38,4 +38,13 @@ public class DefaultController {
     }
 
 
-}
+    @PostMapping("/interruptThread")
+    public boolean interruptThread(@RequestParam String threadName) {
+        return botUserService.interruptThread(threadName);
+    }
+
+    @GetMapping("/getThreadsMap")
+    public String getThreadsMap() {
+        return botUserService.getThreadsMap();
+    }
+    }
