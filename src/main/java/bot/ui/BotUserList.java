@@ -1,7 +1,6 @@
 package bot.ui;
 
 import bot.config.ApplicationContextProvider;
-import bot.config.Props;
 import bot.model.BotUser;
 import bot.repository.BotUserRepository;
 import bot.utils.Constants;
@@ -16,19 +15,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.List;
 
-@Route("q")
+@Route("users")
 public class BotUserList extends HorizontalLayout {
 
     private final Grid<BotUser> BOT_USER_GRID = new Grid<>(BotUser.class, false);
-    BotUserRepository botUserRepository = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class);
+    private final BotUserRepository botUserRepository = ApplicationContextProvider.getApplicationContext().getBean(BotUserRepository.class);
     private final VerticalLayout TOOLBAR = new VerticalLayout();
     private final int LIMIT_BOT_USER_LIST = 1000000;
     private final List<BotUser> BOT_USER_LIST = botUserRepository.findAllLimit(LIMIT_BOT_USER_LIST);
     private List<BotUser> botUserListFiltered = BOT_USER_LIST;
     private final TextArea TEXT_AREA = new TextArea();
-    private final int TOTAL_BOT_USERS =botUserRepository.getTotalUsersBot();
-
-
+    private final int TOTAL_BOT_USERS = botUserRepository.getTotalUsersBot();
 
 
     @Autowired
@@ -53,7 +50,7 @@ public class BotUserList extends HorizontalLayout {
 
 
     private void initTextArea(int count) {
-        int proportion = Math.round((count* 100) / TOTAL_BOT_USERS);
+        int proportion = Math.round((count * 100) / TOTAL_BOT_USERS);
         TEXT_AREA.setValue(proportion + "% пользователей (" + count + " из " + TOTAL_BOT_USERS + ")");
     }
 
@@ -141,7 +138,7 @@ public class BotUserList extends HorizontalLayout {
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findBySubscriptionsOverSubscribers(LIMIT_BOT_USER_LIST);
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea( botUserRepository.countFindBySubscriptionsOverSubscribers());
+                        initTextArea(botUserRepository.countFindBySubscriptionsOverSubscribers());
                     });
                     break;
                 case Constants.findBySubscribersOverSubscriptions:
@@ -162,7 +159,7 @@ public class BotUserList extends HorizontalLayout {
                     button.addClickListener(e -> {
                         botUserListFiltered = botUserRepository.findByIsPrivate(LIMIT_BOT_USER_LIST);
                         BOT_USER_GRID.setItems(limitBotUserList(botUserListFiltered));
-                        initTextArea( botUserRepository.countFindByIsPrivate());
+                        initTextArea(botUserRepository.countFindByIsPrivate());
                     });
                     break;
                 case Constants.findByPhoneNumberSet:
